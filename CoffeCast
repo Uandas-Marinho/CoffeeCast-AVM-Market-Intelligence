@@ -1,0 +1,112 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import yfinance as yf\n",
+        "\n",
+        "print(\"--- COFFEECAST: INGESTÃO DE DADOS DE MERCADO ---\")\n",
+        "\n",
+        "tickers = [\"KC=F\", \"USDBRL=X\"]\n",
+        "\n",
+        "print(f\"Baixando dados históricos para: {tickers} ...\")\n",
+        "\n",
+        "dados = yf.download(tickers, period=\"2y\", interval=\"1d\")['Close']\n",
+        "dados = dados.dropna()\n",
+        "\n",
+        "print(\"\\nPrimeiras linhas dos dados brutos coletados:\")\n",
+        "print(dados.head())\n",
+        "\n",
+        "print(\"\\nÚltimas linhas (dados mais recentes):\")\n",
+        "print(dados.tail())\n",
+        "\n",
+        "dados.to_csv(\"dados_cafe_mercado.csv\")\n",
+        "print(\"\\n[Sucesso!] Arquivo 'dados_cafe_mercado.csv' salvo com sucesso no Colab.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "QU3sG0KpKJ3i",
+        "outputId": "11871cb8-704c-44ae-abfa-e4094533434c"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- COFFEECAST: INGESTÃO DE DADOS DE MERCADO ---\n",
+            "Baixando dados históricos para: ['KC=F', 'USDBRL=X'] ...\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/tmp/ipykernel_10001/3781547060.py:10: FutureWarning: YF.download() has changed argument auto_adjust default to True\n",
+            "  dados = yf.download(tickers, period=\"2y\", interval=\"1d\")['Close']\n",
+            "[*********************100%***********************]  2 of 2 completed"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "Primeiras linhas dos dados brutos coletados:\n",
+            "Ticker            KC=F  USDBRL=X\n",
+            "Date                            \n",
+            "2024-11-06  248.750000    5.7398\n",
+            "2024-11-07  260.399994    5.6748\n",
+            "2024-11-08  253.350006    5.6910\n",
+            "2024-11-11  256.200012    5.7364\n",
+            "2024-11-12  263.549988    5.7554\n",
+            "\n",
+            "Últimas linhas (dados mais recentes):\n",
+            "Ticker            KC=F  USDBRL=X\n",
+            "Date                            \n",
+            "2026-11-02  292.100006    5.4351\n",
+            "2026-11-03  283.950012    5.4363\n",
+            "2026-11-04  279.750000    5.4870\n",
+            "2026-11-05  277.149994    5.4587\n",
+            "2026-11-06  280.649994    5.4991\n",
+            "\n",
+            "[Sucesso!] Arquivo 'dados_cafe_mercado.csv' salvo com sucesso no Colab.\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "PCNb-HqaKR1U"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
