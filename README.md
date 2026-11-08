@@ -50,3 +50,11 @@ A interface foi estruturada em um contêiner elegante de tamanho fixo (`max-widt
 1. Clone o repositório:
    ```bash
    git clone https://github.com/seu-usuario/coffeecast-mobile.git
+
+
+
+
+
+
+
+<img width="1920" height="1080" alt="CoffeeCast gráfico" src="https://github.com/user-attachments/assets/1893ab59-25d0-4918-baa4-952cdcfb7eb3" />
