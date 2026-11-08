@@ -1,112 +1,123 @@
-{
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": []
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
-    }
-  },
-  "cells": [
-    {
-      "cell_type": "code",
-      "source": [
-        "import pandas as pd\n",
-        "import yfinance as yf\n",
-        "\n",
-        "print(\"--- COFFEECAST: INGESTÃO DE DADOS DE MERCADO ---\")\n",
-        "\n",
-        "tickers = [\"KC=F\", \"USDBRL=X\"]\n",
-        "\n",
-        "print(f\"Baixando dados históricos para: {tickers} ...\")\n",
-        "\n",
-        "dados = yf.download(tickers, period=\"2y\", interval=\"1d\")['Close']\n",
-        "dados = dados.dropna()\n",
-        "\n",
-        "print(\"\\nPrimeiras linhas dos dados brutos coletados:\")\n",
-        "print(dados.head())\n",
-        "\n",
-        "print(\"\\nÚltimas linhas (dados mais recentes):\")\n",
-        "print(dados.tail())\n",
-        "\n",
-        "dados.to_csv(\"dados_cafe_mercado.csv\")\n",
-        "print(\"\\n[Sucesso!] Arquivo 'dados_cafe_mercado.csv' salvo com sucesso no Colab.\")"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "QU3sG0KpKJ3i",
-        "outputId": "11871cb8-704c-44ae-abfa-e4094533434c"
-      },
-      "execution_count": 2,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "--- COFFEECAST: INGESTÃO DE DADOS DE MERCADO ---\n",
-            "Baixando dados históricos para: ['KC=F', 'USDBRL=X'] ...\n"
-          ]
-        },
-        {
-          "output_type": "stream",
-          "name": "stderr",
-          "text": [
-            "/tmp/ipykernel_10001/3781547060.py:10: FutureWarning: YF.download() has changed argument auto_adjust default to True\n",
-            "  dados = yf.download(tickers, period=\"2y\", interval=\"1d\")['Close']\n",
-            "[*********************100%***********************]  2 of 2 completed"
-          ]
-        },
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "\n",
-            "Primeiras linhas dos dados brutos coletados:\n",
-            "Ticker            KC=F  USDBRL=X\n",
-            "Date                            \n",
-            "2024-11-06  248.750000    5.7398\n",
-            "2024-11-07  260.399994    5.6748\n",
-            "2024-11-08  253.350006    5.6910\n",
-            "2024-11-11  256.200012    5.7364\n",
-            "2024-11-12  263.549988    5.7554\n",
-            "\n",
-            "Últimas linhas (dados mais recentes):\n",
-            "Ticker            KC=F  USDBRL=X\n",
-            "Date                            \n",
-            "2026-11-02  292.100006    5.4351\n",
-            "2026-11-03  283.950012    5.4363\n",
-            "2026-11-04  279.750000    5.4870\n",
-            "2026-11-05  277.149994    5.4587\n",
-            "2026-11-06  280.649994    5.4991\n",
-            "\n",
-            "[Sucesso!] Arquivo 'dados_cafe_mercado.csv' salvo com sucesso no Colab.\n"
-          ]
-        },
-        {
-          "output_type": "stream",
-          "name": "stderr",
-          "text": [
-            "\n"
-          ]
-        }
-      ]
-    },
-    {
-      "cell_type": "code",
-      "source": [],
-      "metadata": {
-        "id": "PCNb-HqaKR1U"
-      },
-      "execution_count": null,
-      "outputs": []
-    }
-  ]
-}
+import pandas as pd
+import matplotlib.pyplot as plt
+import io
+import base64
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+
+# 1. Carregar e processar os dados
+try:
+    df = pd.read_csv("dados_cafe_mercado.csv", index_col="Date", parse_dates=True)
+except FileNotFoundError:
+    import yfinance as yf
+    df = yf.download(["KC=F", "USDBRL=X"], period="2y")['Close'].dropna()
+    df.to_csv("dados_cafe_mercado.csv")
+
+df['Cafe_USD_Saca'] = (df['KC=F'] / 100) * 132.2773
+df['Cafe_BRL_Saca'] = df['Cafe_USD_Saca'] * df['USDBRL=X']
+
+# 2. Layout visual do Topo (Estilo Mobile)
+titulo_html = """
+<div style='background-color: #4A3B32; padding: 15px; border-radius: 10px; text-align: center; color: white; font-family: sans-serif; margin-bottom: 15px;'>
+    <h2 style='margin: 0;'>☕ CoffeeCast Mobile (Estático)</h2>
+    <p style='margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;'>Compatibilidade Máxima Ativada</p>
+</div>
+"""
+
+ultimo_cafe_brl = df['Cafe_BRL_Saca'].iloc[-1]
+ultimo_dolar = df['USDBRL=X'].iloc[-1]
+ultima_data = df.index[-1].strftime('%d/%m/%Y')
+
+cards_html_template = """
+<div style='display: flex; justify-content: space-around; font-family: sans-serif; margin-bottom: 10px;'>
+    <div style='background: #f4f1ea; padding: 12px; border-radius: 8px; border-left: 5px solid #8B5A2B; min-width: 140px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);'>
+        <span style='font-size: 11px; color: #666; text-transform: uppercase;'>Saca de Café</span>
+        <h3 style='margin: 5px 0; color: #8B5A2B;'>R$ {cafe:,.2f}</h3>
+    </div>
+    <div style='background: #f4f1ea; padding: 12px; border-radius: 8px; border-left: 5px solid #2E8B57; min-width: 140px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);'>
+        <span style='font-size: 11px; color: #666; text-transform: uppercase;'>Câmbio Comercial</span>
+        <h3 style='margin: 5px 0; color: #2E8B57;'>R$ {dolar:,.4f}</h3>
+    </div>
+</div>
+<p style='text-align: center; font-size: 11px; color: #999; font-family: sans-serif; margin-bottom: 15px;'>Última atualização: {data}</p>
+"""
+
+# 3. Componentes de Controle de Interface
+periodo_botoes = widgets.ToggleButtons(
+    options=['30 Dias', '6 Meses', '1 Ano', 'Todo o Período'],
+    value='6 Meses',
+    description='Período:',
+    style={'button_width': '90px'}
+)
+
+painel_saida = widgets.Output()
+
+# 4. Função para gerar gráfico estático em alta resolução e converter para HTML
+def gerar_grafico_estatico(df_filtrado):
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 5.5), sharex=True, dpi=110)
+    
+    # Subplot 1: Café
+    ax1.plot(df_filtrado.index, df_filtrado['Cafe_BRL_Saca'], color='#8B5A2B', linewidth=2, label='Café (R$)')
+    ax1.set_title('Preço Estimado da Saca de Café (R$)', fontsize=10, fontweight='bold', color='#4A3B32')
+    ax1.grid(True, linestyle='--', alpha=0.5, color='#ccc')
+    ax1.set_facecolor('#fafafa')
+    
+    # Subplot 2: Câmbio
+    ax2.plot(df_filtrado.index, df_filtrado['USDBRL=X'], color='#2E8B57', linewidth=2, label='Dólar (R$)')
+    ax2.set_title('Taxa de Câmbio (USD/BRL)', fontsize=10, fontweight='bold', color='#2E8B57')
+    ax2.grid(True, linestyle='--', alpha=0.5, color='#ccc')
+    ax2.set_facecolor('#fafafa')
+    
+    plt.tight_layout()
+    
+    # Salvar em buffer de memória e codificar em Base64
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    plt.close(fig)
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    return f'<div style="text-align: center; margin-top: 10px;"><img src="data:image/png;base64,{image_base64}" style="max-width: 100%; border-radius: 8px;" /></div>'
+
+# 5. Função de atualização dinâmica do painel unificado
+def renderizar_painel(change):
+    with painel_saida:
+        clear_output(wait=True)
+        
+        opcao = periodo_botoes.value
+        if opcao == '30 Dias':
+            df_filtrado = df.tail(30)
+        elif opcao == '6 Meses':
+            df_filtrado = df.tail(126)
+        elif opcao == '1 Ano':
+            df_filtrado = df.tail(252)
+        else:
+            df_filtrado = df
+            
+        # Gerar o gráfico incorporado
+        grafico_html = gerar_grafico_estatico(df_filtrado)
+        
+        # HTML Final consolidado contendo os dados
+        painel_html = widgets.HTML(
+            value=f"""
+            <div style='max-width: 450px; border: 1px solid #ccc; border-radius: 12px; padding: 15px; margin: auto; box-shadow: 0px 4px 15px rgba(0,0,0,0.1); background-color: white;'>
+                {titulo_html}
+                {cards_html_template.format(cafe=ultimo_cafe_brl, dolar=ultimo_dolar, data=ultima_data)}
+                <hr style='border: 0; border-top: 1px solid #eee; margin: 15px 0;'>
+                <div style='display: flex; justify-content: center; margin-bottom: 10px;'>
+                    <!-- Botões controlados externamente via widgets -->
+                </div>
+                {grafico_html}
+            </div>
+            """
+        )
+        display(painel_html)
+
+# Ligar eventos
+periodo_botoes.observe(renderizar_painel, names='value')
+
+# Primeira renderização
+renderizar_painel(None)
+
+# Exibir a estrutura na ordem correta
+display(periodo_botoes)
+display(painel_saida)
