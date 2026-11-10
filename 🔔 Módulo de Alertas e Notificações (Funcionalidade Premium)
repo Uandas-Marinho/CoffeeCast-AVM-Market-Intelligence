@@ -1,0 +1,105 @@
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+
+# Banco de dados simulado em memória para os alertas do usuário
+alertas_ativos = []
+
+# Componentes visuais para criação de Alertas
+moeda_seletor = widgets.Dropdown(
+    options={'Saca de Café (R$)': 'Cafe_BRL_Saca', 'Câmbio Dólar (R$)': 'USDBRL=X'},
+    value='Cafe_BRL_Saca',
+    description='Ativo:',
+    style={'description_width': 'initial'}
+)
+
+condicao_seletor = widgets.Dropdown(
+    options={'Maior ou Igual a (>=)': '>=', 'Menor ou Igual a (<=)': '<='},
+    value='>=',
+    description='Condição:',
+    style={'description_width': 'initial'}
+)
+
+valor_limite = widgets.FloatText(
+    value=2000.00,
+    description='Valor Alvo (R$):',
+    style={'description_width': 'initial'}
+)
+
+botao_criar = widgets.Button(
+    description='Criar Alerta',
+    button_style='success',
+    icon='bell'
+)
+
+painel_alertas = widgets.Output()
+log_disparos = widgets.Output()
+
+def renderizar_alertas():
+    with painel_alertas:
+        clear_output(wait=True)
+        print("🔔 SEUS ALERTAS ATIVOS:")
+        if not alertas_ativos:
+            print("Nenhum alerta configurado no momento.")
+        for i, alt in enumerate(alertas_ativos):
+            nome_ativo = "Café" if alt['ativo'] == 'Cafe_BRL_Saca' else "Dólar"
+            print(f"{i+1}. Notificar quando [{nome_ativo}] for {alt['condicao']} R$ {alt['valor']:.2f}")
+
+def criar_alerta_click(b):
+    novo_alerta = {
+        'ativo': moeda_seletor.value,
+        'condicao': condicao_seletor.value,
+        'valor': valor_limite.value
+    }
+    alertas_ativos.append(novo_alerta)
+    renderizar_alertas()
+    verificar_alertas_instantaneamente()
+
+botao_criar.on_click(criar_alerta_click)
+
+def verificar_alertas_instantaneamente():
+    with log_disparos:
+        clear_output(wait=True)
+        print("🔄 Verificando condições de mercado...")
+        
+        # Obter últimos valores reais carregados no df do bloco anterior
+        v_cafe = df['Cafe_BRL_Saca'].iloc[-1]
+        v_dolar = df['USDBRL=X'].iloc[-1]
+        
+        valores_atuais = {
+            'Cafe_BRL_Saca': v_cafe,
+            'USDBRL=X': v_dolar
+        }
+        
+        disparou_algum = False
+        
+        for alt in alertas_ativos:
+            valor_atual = valores_atuais[alt['ativo']]
+            nome_ativo = "Café ☕" if alt['ativo'] == 'Cafe_BRL_Saca' else "Dólar 💵"
+            
+            condicao_atendida = False
+            if alt['condicao'] == '>=' and valor_atual >= alt['valor']:
+                condicao_atendida = True
+            elif alt['condicao'] == '<=' and valor_atual <= alt['valor']:
+                condicao_atendida = True
+                
+            if condicao_atendida:
+                disparou_algum = True
+                print(f"\n🚨 NOTIFICAÇÃO DISPARADA NO CELULAR!")
+                print(f"📱 Mensagem: O preço do {nome_ativo} atingiu R$ {valor_atual:,.2f} (Sua meta era {alt['condicao']} R$ {alt['valor']:,.2f})")
+        
+        if not disparou_algum:
+            print("\n🟢 Tudo calmo. Nenhuma meta de preço foi atingida com as cotações atuais.")
+
+# Layout Visual do Criador de Alertas
+ui_criador = widgets.VBox([
+    widgets.HTML("<h4>⚙️ Configurar Novo Alerta de Preço</h4>"),
+    widgets.HBox([moeda_seletor, condicao_seletor, valor_limite]),
+    botao_criar
+], layout=widgets.Layout(border='1px solid #ccc', padding='10px', border_radius='8px', margin='10px 0'))
+
+# Primeira renderização do painel
+renderizar_alertas()
+
+display(ui_criador)
+display(painel_alertas)
+display(log_disparos)
