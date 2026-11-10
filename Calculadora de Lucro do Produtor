@@ -1,0 +1,101 @@
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+
+# Obter a cotação atual como padrão de venda
+cotacao_atual = float(df['Cafe_BRL_Saca'].iloc[-1])
+
+# Elementos de Entrada da UI (Estilo Mobile)
+num_sacas = widgets.IntSlider(
+    value=100,
+    min=10,
+    max=5000,
+    step=10,
+    description='Qtd. Sacas:',
+    style={'description_width': 'initial'},
+    layout=widgets.Layout(width='90%')
+)
+
+custo_saca = widgets.FloatSlider(
+    value=1200.00,
+    min=500.00,
+    max=2500.00,
+    step=50.00,
+    description='Custo/Saca (R$):',
+    style={'description_width': 'initial'},
+    layout=widgets.Layout(width='90%')
+)
+
+preco_venda = widgets.FloatText(
+    value=round(cotacao_atual, 2),
+    description='Preço Venda (R$):',
+    style={'description_width': 'initial'},
+    layout=widgets.Layout(width='90%')
+)
+
+painel_resultado = widgets.Output()
+
+def calcular_lucro(*args):
+    with painel_resultado:
+        clear_output(wait=True)
+        
+        # Cálculos financeiros
+        qtd = num_sacas.value
+        custo = custo_saca.value
+        venda = preco_venda.value
+        
+        receita_total = qtd * venda
+        custo_total = qtd * custo
+        lucro_total = receita_total - custo_total
+        margem_lucro = (lucro_total / receita_total * 100) if receita_total > 0 else 0
+        
+        # Cor do indicador de lucro (verde se positivo, vermelho se prejuízo)
+        cor_lucro = "#2E8B57" if lucro_total >= 0 else "#D32F2F"
+        
+        # Template visual em HTML simulando a tela de um smartphone
+        html_card = f"""
+        <div style='max-width: 450px; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin: auto; box-shadow: 0px 4px 15px rgba(0,0,0,0.1); background-color: #FAFAFA; font-family: sans-serif;'>
+            <div style='background-color: #8B5A2B; padding: 10px; border-radius: 8px; text-align: center; color: white; margin-bottom: 15px;'>
+                <h3 style='margin: 0;'>📊 Resumo de Resultados</h3>
+            </div>
+            
+            <div style='display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;'>
+                <span style='color: #666;'>Faturamento Bruto:</span>
+                <strong style='color: #333;'>R$ {receita_total:,.2f}</strong>
+            </div>
+            <div style='display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;'>
+                <span style='color: #666;'>Custo Total de Produção:</span>
+                <strong style='color: #C2185B;'>R$ {custo_total:,.2f}</strong>
+            </div>
+            
+            <div style='background-color: white; border-left: 5px solid {cor_lucro}; padding: 12px; border-radius: 6px; margin-top: 15px; box-shadow: inset 0 0 5px rgba(0,0,0,0.02);'>
+                <div style='display: flex; justify-content: space-between;'>
+                    <span style='font-size: 14px; font-weight: bold; color: #444;'>Resultado Líquido:</span>
+                    <span style='font-size: 16px; font-weight: bold; color: {cor_lucro};'>R$ {lucro_total:,.2f}</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; margin-top: 5px;'>
+                    <span style='font-size: 12px; color: #777;'>Margem de Lucro:</span>
+                    <span style='font-size: 12px; font-weight: bold; color: {cor_lucro};'>{margem_lucro:.1f}%</span>
+                </div>
+            </div>
+        </div>
+        """
+        display(widgets.HTML(html_card))
+
+# Ligar os observadores para recalcular em tempo real
+num_sacas.observe(calcular_lucro, 'value')
+custo_saca.observe(calcular_lucro, 'value')
+preco_venda.observe(calcular_lucro, 'value')
+
+# Container da Interface do Usuário (Layout Organizado)
+ui_calculadora = widgets.VBox([
+    widgets.HTML("<h4 style='color: #4A3B32;'>⚙️ Parâmetros da Simulação</h4>"),
+    num_sacas,
+    custo_saca,
+    preco_venda
+], layout=widgets.Layout(border='1px solid #8B5A2B', padding='15px', border_radius='8px', margin='10px 0'))
+
+# Renderização inicial
+calcular_lucro()
+
+display(ui_calculadora)
+display(painel_resultado)
